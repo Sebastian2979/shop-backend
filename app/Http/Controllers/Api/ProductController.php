@@ -37,24 +37,22 @@ class ProductController extends Controller
             'image'       => 'nullable|image|mimes:jpg,jpeg,png,webp,gif|max:5120', // 5 MB
         ]);
 
-        // Bild speichern (falls vorhanden)
-        $imagePath = null;
-        if ($request->hasFile('image')) {
-            // Speichert in storage/app/public/products
-            $imagePath = $request->file('image')->store('products', 'public');
-        }
+        $imagePath = $request->file('image')?->store('products', 'public'); // "products/abc.jpg"
 
         $product = Product::create([
             'name'        => $data['name'],
             'price'       => $data['price'],
             'description' => $data['description'] ?? null,
-            'image'  => $imagePath, // nur Pfad/URL in DB!
+            'image'  => $imagePath,
         ]);
 
-        // Optional: gleich eine öffentlich zugängliche URL mitsenden
-        $product->image_url = $imagePath ? asset('storage/' . $imagePath) : null;
-
-        return response()->json($product, 201);
+        return response()->json([
+            'id'         => $product->id,
+            'name'       => $product->name,
+            'price'      => $product->price,
+            'description' => $product->description,
+            'image'  => $imagePath ? Storage::disk('public')->url($imagePath) : null,
+        ], 201);
     }
 
 
@@ -80,11 +78,8 @@ class ProductController extends Controller
             $imagePath = $request->file('image')->store('products', 'public');
             $data['image'] = $imagePath;
         }
-        
-        $product->update($data);
 
-        // Optional: URL mitsenden
-        $product->image_url = $product->image ? asset('storage/' . $product->image) : null;
+        $product->update($data);
 
         return response()->json($product);
     }
