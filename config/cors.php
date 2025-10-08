@@ -9,6 +9,7 @@ return [
     'allowed_origins' => [
         'http://localhost:5173',
         'http://127.0.0.1:5173',
+        'https://shop-frontend-roan.vercel.app'
     ],
 
     // Alternativ (statt oben) flexibel für alle Vite-Ports:
