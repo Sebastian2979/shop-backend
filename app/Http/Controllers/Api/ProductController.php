@@ -46,12 +46,14 @@ class ProductController extends Controller
             'image'  => $imagePath,
         ]);
 
+        Log::info('DEBUG IMAGE URL', [Storage::disk('public')->url($imagePath)]);
+
         return response()->json([
             'id'         => $product->id,
             'name'       => $product->name,
             'price'      => $product->price,
             'description' => $product->description,
-            'image'  => $imagePath ? Storage::disk('public')->url($imagePath) : null,
+            'image'  => Storage::disk('public')->url($imagePath),
         ], 201);
     }
 
