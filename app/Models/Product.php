@@ -13,9 +13,14 @@ class Product extends Model
     // Felder, die massenhaft zuweisbar sind
     protected $fillable = [
         'name',
-        'sku',
+        'category_id',
         'price',
         'description',
         'image',
     ];
+
+    public function category()
+    {
+        return $this->belongsTo(Category::class);
+    }
 }

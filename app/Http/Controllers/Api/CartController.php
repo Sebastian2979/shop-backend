@@ -49,14 +49,11 @@ class CartController extends Controller
         } else {
             // bei dem guest_token handelt es sich um den cart_token vom Frontend
             $token = $request->payload['payload'] ?? $request->header('X-Cart-Token');
-            Log::info('token?', ['payload' => $request->payload]);
             if (empty($token)) {
                 return response()->json(['message' => 'Missing cart token'], 422);
             }
             $cart = Cart::firstOrCreate(['guest_token' => $token]);
         }
-
-        Log::info('Clearing cart', ['cart_id' => $cart->id]);
         
         $cart->items()->delete();
 

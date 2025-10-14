@@ -13,7 +13,7 @@ class ProductController extends Controller
     // Alle Produkte
     public function index()
     {
-        return Product::paginate(10);
+        return Product::with('category')->get();
     }
 
     // Einzelnes Produkt anzeigen
@@ -30,10 +30,12 @@ class ProductController extends Controller
     // Produkt erstellen
     public function store(Request $request)
     {
+        Log::info('vin Request schauen', [$request->all()]);
         $data = $request->validate([
             'name'        => 'required|string|max:255',
             'price'       => 'required|numeric|min:0',
             'description' => 'nullable|string',
+            'category'    => 'required',
             'image'       => 'nullable|image|mimes:jpg,jpeg,png,webp,gif|max:5120', // 5 MB
         ]);
 
@@ -42,11 +44,10 @@ class ProductController extends Controller
         $product = Product::create([
             'name'        => $data['name'],
             'price'       => $data['price'],
+            'category_id' => $data['category'],
             'description' => $data['description'] ?? null,
             'image'  => $imagePath,
         ]);
-
-        Log::info('DEBUG IMAGE URL', [Storage::disk('public')->url($imagePath)]);
 
         return response()->json([
             'id'         => $product->id,
@@ -108,5 +109,12 @@ class ProductController extends Controller
         $product->delete();
 
         return response()->json(['message' => 'Produkt erfolgreich gelöscht'], 200);
+    }
+
+    public function byCategory($categoryId)
+    {
+        $categoryId = intval($categoryId);
+        $products = Product::with('category')->where('category_id', $categoryId)->get();
+        return response()->json($products);
     }
 }
