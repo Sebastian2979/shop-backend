@@ -39,5 +39,5 @@ Route::middleware('auth:sanctum')->get('/orders', [OrderController::class, 'inde
 
 //Category Routes
 Route::middleware('auth:sanctum')->post('/category', [CategoryController::class, 'store']);
-Route::middleware('auth:sanctum')->get('/category', [CategoryController::class, 'index']);
+Route::get('/category', [CategoryController::class, 'index']);
 Route::middleware('auth:sanctum')->delete('/category/{id}', [CategoryController::class, 'delete']);
