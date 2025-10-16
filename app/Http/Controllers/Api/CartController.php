@@ -33,7 +33,7 @@ class CartController extends Controller
 
     public function clearCart(Request $request)
     {
-        
+
         $user = $request->user(); // kann null sein (Gast)
         // wenn keine Sanctum Route, User manuell via Token ermitteln
         if (!$user && ($raw = $request->bearerToken())) {
@@ -54,7 +54,7 @@ class CartController extends Controller
             }
             $cart = Cart::firstOrCreate(['guest_token' => $token]);
         }
-        
+
         $cart->items()->delete();
 
         return response()->json([
@@ -133,13 +133,13 @@ class CartController extends Controller
     public function sync(Request $request)
     {
         $payload = $request->validate([
-            'items' => 'required|array',
-            'items.*.product_id' => 'required|integer|exists:products,id',
-            'items.*.quantity'   => 'required|integer|min:1',
+            'items' => 'array',
+            'items.*.product_id' => 'integer|exists:products,id',
+            'items.*.quantity'   => 'integer|min:0',
         ]);
 
         $user = $request->user(); // kann null sein (Gast)
-        // wenn keine Sanctum Route, User manuell via Token ermitteln
+        // weil keine Sanctum Route, User manuell via Token ermitteln
         if (!$user && ($raw = $request->bearerToken())) {
             if ($pat = PersonalAccessToken::findToken($raw)) {
                 $user = $pat->tokenable;
@@ -184,16 +184,33 @@ class CartController extends Controller
             ->whereNotIn('product_id', $wanted->keys())
             ->delete();
 
-        // Upsert aktuelle Items
+        // 2) Upsert/Löschlogik nach gewünschter Menge
         foreach ($wanted as $pid => $row) {
-            $p = $products[$pid];
-            CartItem::updateOrCreate(
-                ['cart_id' => $cart->id, 'product_id' => $pid],
-                [
-                    'quantity' => $row['quantity'],
-                ]
-            );
+            $qty = (int) ($row['quantity'] ?? 0);
+
+            // Falls Produkt unerwartet nicht geladen wurde, skippe defensiv
+            if (!$products->has($pid)) {
+                continue;
+            }
+
+            if ($qty <= 0) {
+                // Menge 0/negativ -> Item entfernen (nicht speichern!)
+                CartItem::where('cart_id', $cart->id)
+                    ->where('product_id', $pid)
+                    ->delete();
+            } else {
+                // Menge > 0 -> setzen/aktualisieren
+                CartItem::updateOrCreate(
+                    ['cart_id' => $cart->id, 'product_id' => $pid],
+                    ['quantity' => $qty]
+                );
+            }
         }
+
+        // 3) Safety: alles mit <= 0 aus der DB tilgen (falls irgendwo übersehen)
+        CartItem::where('cart_id', $cart->id)
+            ->where('quantity', '<=', 0)
+            ->delete();
 
         $items = CartItem::with('product')->where('cart_id', $cart->id)->get();
 
