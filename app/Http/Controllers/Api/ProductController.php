@@ -13,7 +13,7 @@ class ProductController extends Controller
     // Alle Produkte
     public function index()
     {
-        return Product::with('category')->paginate(10);
+        return Product::with('category')->paginate(20);
     }
 
     // Einzelnes Produkt anzeigen
