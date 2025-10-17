@@ -30,13 +30,12 @@ class ProductController extends Controller
     // Produkt erstellen
     public function store(Request $request)
     {
-        Log::info('vin Request schauen', [$request->all()]);
         $data = $request->validate([
             'name'        => 'required|string|max:255',
             'price'       => 'required|numeric|min:0',
             'description' => 'nullable|string',
             'category'    => 'required',
-            'image'       => 'nullable|image|mimes:jpg,jpeg,png,webp,gif|max:5120', // 5 MB
+            'image'       => 'nullable|image|mimes:jpg,jpeg,png,webp,gif|max:5120',
         ]);
 
         $imagePath = $request->file('image')?->store('products', 'public'); // "products/abc.jpg"
