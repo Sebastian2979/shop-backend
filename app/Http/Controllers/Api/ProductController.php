@@ -19,7 +19,7 @@ class ProductController extends Controller
     // Einzelnes Produkt anzeigen
     public function show($id)
     {
-        $product = Product::find($id);
+        $product = Product::with('category')->find($id);
 
         if (! $product) {
             return response()->json(['message' => 'Produkt nicht gefunden'], 404);
@@ -67,6 +67,7 @@ class ProductController extends Controller
             'name'        => 'sometimes|string|max:255',
             'price'       => 'sometimes|numeric|min:0',
             'description' => 'nullable|string',
+            'category_id'    => 'required',
             'image'       => 'nullable|image|mimes:jpg,jpeg,png,webp,gif|max:5120',
         ]);
 
